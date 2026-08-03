@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard // OS-STATS</title>
+<style>
+  :root{
+    --bg:#0a0000;
+    --bg2:#120303;
+    --red:#ff003c;
+    --red-dim:#7a001d;
+    --black:#050000;
+    --text:#f1e1e1;
+    --grid:rgba(255,0,60,0.08);
+    --green:#4dff88;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Consolas','Courier New',monospace;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:40px 40px;
+    display:flex;min-height:100vh;
+  }
+
+  /* Sidebar */
+  .sidebar{
+    width:220px;background:var(--bg2);border-right:1px solid var(--red-dim);
+    padding:24px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .side-logo{
+    font-size:20px;font-weight:bold;color:var(--red);letter-spacing:2px;
+    text-shadow:0 0 10px var(--red);padding:0 24px 24px;
+  }
+  .side-logo span{color:var(--text);}
+  .side-link{
+    display:flex;align-items:center;gap:12px;padding:13px 24px;color:#a88;
+    text-decoration:none;font-size:13px;letter-spacing:1px;border-left:3px solid transparent;
+    transition:.2s;
+  }
+  .side-link:hover, .side-link.active{
+    color:var(--red);background:rgba(255,0,60,0.06);border-left-color:var(--red);
+  }
+  .side-icon{
+    width:18px;height:18px;flex-shrink:0;
+    filter:brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(7466%) hue-rotate(348deg) brightness(101%) contrast(119%);
+    opacity:.75;
+  }
+  .side-link:hover .side-icon, .side-link.active .side-icon{opacity:1;}
+  .side-bottom{margin-top:auto;padding:16px 24px;border-top:1px solid var(--red-dim);}
+  .side-user{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .side-avatar{
+    width:34px;height:34px;border-radius:50%;background:var(--red-dim);
+    display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--red);
+    border:1px solid var(--red);overflow:hidden;flex-shrink:0;
+  }
+  .side-avatar img{width:100%;height:100%;object-fit:cover;}
+  .side-username{font-size:13px;color:var(--text);}
+  .logout-btn{
+    width:100%;background:transparent;border:1px solid var(--red-dim);color:#c99;
+    padding:8px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;
+    letter-spacing:1px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+  .logout-btn .side-icon{opacity:.8;}
+
+  /* Main */
+  .main{flex:1;padding:30px 36px;max-width:1400px;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:14px;
+  }
+  .topbar h1{font-size:24px;letter-spacing:2px;color:var(--text);}
+  .topbar .status{
+    font-size:12px;color:var(--green);display:flex;align-items:center;gap:6px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.5s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .grid-top{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:30px;
+  }
+  .mini-card{
+    background:linear-gradient(160deg, var(--bg2), var(--black));
+    border:1px solid var(--red-dim);border-radius:6px;padding:18px;
+  }
+  .mini-card .label{font-size:11px;color:#A40000;letter-spacing:1px;margin-bottom:8px;}
+  .mini-card .val{font-size:26px;color:var(--red);font-weight:bold;}
+  .mini-card .delta{font-size:11px;color:var(--green);margin-top:4px;}
+
+  .panel{
+    background:linear-gradient(160deg, var(--bg2), var(--black));
+    border:1px solid var(--red-dim);border-radius:8px;padding:24px;margin-bottom:26px;
+  }
+  .panel h2{font-size:16px;color:var(--red);letter-spacing:1px;margin-bottom:18px;
+    border-left:3px solid var(--red);padding-left:10px;}
+
+  canvas{width:100%;height:220px;display:block;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:#a88;padding:10px;border-bottom:1px solid var(--red-dim);letter-spacing:1px;font-size:11px;}
+  td{padding:10px;border-bottom:1px solid rgba(255,0,60,0.06);}
+  tr:hover td{background:rgba(255,0,60,0.04);}
+  .os-cell{display:flex;align-items:center;gap:10px;}
+  .os-cell img{width:22px;height:22px;object-fit:contain;}
+  .trend-up{color:var(--green);}
+  .trend-down{color:#ff5566;}
+
+  .search-bar{
+    width:100%;background:var(--black);border:1px solid var(--red-dim);border-radius:4px;
+    padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;
+    margin-bottom:16px;
+  }
+  .search-bar:focus{border-color:var(--red);}
+
+  @media(max-width:800px){
+    .sidebar{position:fixed;left:-220px;z-index:200;transition:.3s;box-shadow:0 0 30px rgba(0,0,0,0.6);}
+    .sidebar.open{left:0;}
+    .main{padding:20px;}
+    .menu-toggle{display:block !important;}
+  }
+  .menu-toggle{
+    display:none;background:transparent;border:1px solid var(--red-dim);color:var(--red);
+    padding:8px 12px;border-radius:4px;cursor:pointer;font-family:inherit;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="side-logo">OS<span>-STATS</span></div>
+  <a href="index.html" class="side-link">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/home/v6/24px.svg" onerror="this.src=localIcon('H')">
+    Home
+  </a>
+  <a href="dashboard.html" class="side-link active">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/monitoring/v6/24px.svg" onerror="this.src=localIcon('D')">
+    Dashboard
+  </a>
+  <a href="settings.html" class="side-link">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/settings/v6/24px.svg" onerror="this.src=localIcon('S')">
+    Settings
+  </a>
+
+  <div class="side-bottom">
+    <div class="side-user">
+      <div class="side-avatar" id="sideAvatar">?</div>
+      <div class="side-username" id="sideUsername">Guest</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/logout/v6/24px.svg" onerror="this.src=localIcon('X')">
+      LOGOUT
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <h1>SYSTEM DASHBOARD</h1>
+    <div class="status"><span class="dot"></span> LIVE — <span id="clock"></span></div>
+  </div>
+
+  <div class="grid-top" id="miniCards"></div>
+
+  <div class="panel">
+    <h2>MARKET SHARE TREND (7 DAYS)</h2>
+    <canvas id="trendChart"></canvas>
+  </div>
+
+  <div class="panel">
+    <h2>DETAILED BREAKDOWN</h2>
+    <input type="text" class="search-bar" id="searchInput" placeholder="> cari operating system...">
+    <table>
+      <thead>
+        <tr><th>OS</th><th>Share</th><th>Users (est.)</th><th>Trend</th></tr>
+      </thead>
+      <tbody id="osTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // local fallback icon generator (kalau Google CDN gagal load)
+  function localIcon(letter){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+      <rect width="18" height="18" rx="4" fill="none" stroke="#ff003c" stroke-width="1.4"/>
+      <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Consolas,monospace" font-size="9" fill="#ff003c" font-weight="bold">${letter}</text>
+    </svg>`;
+    return "data:image/svg+xml;base64," + btoa(svg);
+  }
+
+  // ---- Auth guard ----
+  const user = JSON.parse(localStorage.getItem('osstats_user') || 'null');
+  if(!user){
+    window.location.href = 'auth.html';
+  }
+
+  document.getElementById('sideUsername').textContent = user ? user.username : 'Guest';
+  const avatarEl = document.getElementById('sideAvatar');
+  if(user && user.avatar){
+    avatarEl.innerHTML = `<img src="${user.avatar}" alt="avatar">`;
+  } else if(user){
+    avatarEl.textContent = user.username.charAt(0).toUpperCase();
+  }
+
+  function logout(){
+    localStorage.removeItem('osstats_user');
+    window.location.href = 'index.html';
+  }
+
+  // ---- Clock ----
+  function updateClock(){
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-ID');
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ---- OS Data ----
+  function localFallbackSVG(letter){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+      <rect width="22" height="22" rx="5" fill="#1a0505" stroke="#ff003c" stroke-width="1"/>
+      <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Consolas,monospace" font-size="10" fill="#ff003c" font-weight="bold">${letter}</text>
+    </svg>`;
+    return "data:image/svg+xml;base64," + btoa(svg);
+  }
+
+  const osData = [
+    { name:"Windows", pct:68.4, users:"1.4B", trend:1, slugs:["windows11","windows"], letter:"W" },
+    { name:"Android", pct:41.2, users:"3.3B", trend:1, slugs:["android"], letter:"A" },
+    { name:"iOS", pct:17.8, users:"1.5B", trend:1, slugs:["apple","ios"], letter:"i" },
+    { name:"macOS", pct:9.6, users:"120M", trend:1, slugs:["macos","apple"], letter:"M" },
+    { name:"Linux", pct:3.1, users:"48M", trend:1, slugs:["linux","tux"], letter:"L" },
+    { name:"Chrome OS", pct:1.9, users:"22M", trend:-1, slugs:["googlechrome"], letter:"C" },
+  ];
+
+  function imgWithFallback(os){
+    const urls = os.slugs.map(s => `https://cdn.simpleicons.org/${s}/ff003c`);
+    urls.push(localFallbackSVG(os.letter));
+    return `<img src="${urls[0]}" data-tries="0" data-urls='${JSON.stringify(urls)}' onerror="handleImgError(this)">`;
+  }
+  function handleImgError(img){
+    const urls = JSON.parse(img.dataset.urls);
+    let tries = parseInt(img.dataset.tries) + 1;
+    if(tries < urls.length){
+      img.dataset.tries = tries;
+      img.src = urls[tries];
+    } else {
+      img.onerror = null;
+    }
+  }
+
+  // ---- Mini cards ----
+  const miniWrap = document.getElementById('miniCards');
+  const topOS = [...osData].sort((a,b)=>b.pct-a.pct).slice(0,4);
+  topOS.forEach(os=>{
+    const c = document.createElement('div');
+    c.className='mini-card';
+    c.innerHTML = `
+      <div class="label">${os.name.toUpperCase()}</div>
+      <div class="val">${os.pct}%</div>
+      <div class="delta">${os.trend>0?'▲':'▼'} ${(Math.random()*0.8+0.1).toFixed(2)}% this week</div>
+    `;
+    miniWrap.appendChild(c);
+  });
+
+  // ---- Table ----
+  const tbody = document.getElementById('osTableBody');
+  function renderTable(filter=''){
+    tbody.innerHTML = '';
+    osData
+      .filter(os => os.name.toLowerCase().includes(filter.toLowerCase()))
+      .sort((a,b)=>b.pct-a.pct)
+      .forEach(os=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><div class="os-cell">${imgWithFallback(os)} ${os.name}</div></td>
+          <td>${os.pct}%</td>
+          <td>${os.users}</td>
+          <td class="${os.trend>0?'trend-up':'trend-down'}">${os.trend>0?'▲ naik':'▼ turun'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+  }
+  renderTable();
+  document.getElementById('searchInput').addEventListener('input', e=>renderTable(e.target.value));
+
+  // ---- Line chart (native canvas, no lib) ----
+  function drawChart(){
+    const canvas = document.getElementById('trendChart');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = 220 * dpr;
+    ctx.scale(dpr, dpr);
+    const w = rect.width, h = 220;
+    ctx.clearRect(0,0,w,h);
+
+    const points = [66.1, 66.8, 67.2, 67.9, 68.0, 68.3, 68.4];
+    const max = Math.max(...points) + 1;
+    const min = Math.min(...points) - 1;
+    const padX = 30, padY = 20;
+    const stepX = (w - padX*2) / (points.length - 1);
+
+    ctx.strokeStyle = 'rgba(255,0,60,0.1)';
+    ctx.lineWidth = 1;
+    for(let i=0;i<=4;i++){
+      const y = padY + (h-padY*2)*i/4;
+      ctx.beginPath();
+      ctx.moveTo(padX,y); ctx.lineTo(w-padX,y); ctx.stroke();
+    }
+
+    ctx.beginPath();
+    points.forEach((p,i)=>{
+      const x = padX + stepX*i;
+      const y = padY + (h-padY*2)*(1-(p-min)/(max-min));
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = '#A40000';
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = '#ff003c';
+    ctx.shadowBlur = 10;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    const days = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+    points.forEach((p,i)=>{
+      const x = padX + stepX*i;
+      const y = padY + (h-padY*2)*(1-(p-min)/(max-min));
+      ctx.beginPath();
+      ctx.arc(x,y,4,0,Math.PI*2);
+      ctx.fillStyle = '#ff003c';
+      ctx.fill();
+
+      ctx.fillStyle = '#A40000';
+      ctx.font = '10px Consolas';
+      ctx.textAlign = 'center';
+      ctx.fillText(days[i], x, h-2);
+    });
+  }
+  drawChart();
+  window.addEventListener('resize', drawChart);
+</script>
+
+</body>
+</html>
