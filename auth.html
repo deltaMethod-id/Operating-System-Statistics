@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auth // OS-STATS</title>
+<style>
+  :root{
+    --bg:#0a0000;
+    --bg2:#120303;
+    --red:#ff003c;
+    --red-dim:#7a001d;
+    --black:#050000;
+    --text:#f1e1e1;
+    --grid:rgba(255,0,60,0.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Consolas','Courier New',monospace;
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:40px 40px;
+    padding:20px;
+  }
+  .box{
+    width:100%;max-width:400px;
+    background:linear-gradient(160deg, var(--bg2), var(--black));
+    border:1px solid var(--red-dim);
+    border-radius:8px;
+    padding:36px 30px;
+    box-shadow:0 0 40px rgba(255,0,60,0.15);
+    position:relative;
+  }
+  .logo{
+    text-align:center;font-size:22px;font-weight:bold;color:var(--red);
+    letter-spacing:2px;text-shadow:0 0 10px var(--red);margin-bottom:6px;
+  }
+  .logo span{color:var(--text);}
+  .sub{text-align:center;color:#A40000;font-size:12px;margin-bottom:26px;letter-spacing:1px;}
+
+  .tabs{display:flex;margin-bottom:26px;border:1px solid var(--red-dim);border-radius:4px;overflow:hidden;}
+  .tab{
+    flex:1;text-align:center;padding:10px;cursor:pointer;font-size:13px;
+    letter-spacing:1px;color:#a88;transition:.2s;background:transparent;border:none;font-family:inherit;
+  }
+  .tab.active{background:var(--red);color:var(--black);font-weight:bold;}
+
+  form{display:none;flex-direction:column;gap:16px;}
+  form.active{display:flex;}
+
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field label{font-size:12px;color:#c99;letter-spacing:1px;}
+  .field input{
+    background:var(--black);border:1px solid var(--red-dim);border-radius:4px;
+    padding:11px 12px;color:var(--text);font-family:inherit;font-size:14px;
+    outline:none;transition:.2s;
+  }
+  .field input:focus{border-color:var(--red);box-shadow:0 0 12px rgba(255,0,60,0.3);}
+
+  .submit-btn{
+    margin-top:6px;background:var(--red);color:var(--black);border:none;
+    padding:12px;border-radius:4px;font-weight:bold;letter-spacing:1px;
+    cursor:pointer;font-family:inherit;font-size:14px;transition:.2s;
+  }
+  .submit-btn:hover{box-shadow:0 0 20px var(--red);}
+
+  .msg{
+    font-size:12px;text-align:center;margin-top:14px;min-height:16px;
+  }
+  .msg.error{color:#ff5566;}
+  .msg.success{color:#5cff8a;}
+
+  .back{
+    display:block;text-align:center;margin-top:20px;color:#A40000;
+    text-decoration:none;font-size:12px;letter-spacing:1px;
+  }
+  .back:hover{color:var(--red);}
+
+  .terminal-line{
+    text-align:center;font-size:11px;color:var(--red-dim);margin-top:18px;letter-spacing:1px;
+  }
+</style>
+</head>
+<body>
+
+<div class="box">
+  <div class="logo">OS<span>-STATS</span></div>
+  <div class="sub">SECURE ACCESS TERMINAL</div>
+
+  <div class="tabs">
+    <button class="tab active" id="loginTab" onclick="switchTab('login')">LOGIN</button>
+    <button class="tab" id="signupTab" onclick="switchTab('signup')">SIGN UP</button>
+  </div>
+
+  <form id="loginForm" class="active" onsubmit="handleLogin(event)">
+    <div class="field">
+      <label>USERNAME</label>
+      <input type="text" id="loginUsername" required autocomplete="username">
+    </div>
+    <div class="field">
+      <label>PASSWORD</label>
+      <input type="password" id="loginPassword" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="submit-btn">> LOGIN</button>
+    <div class="msg" id="loginMsg"></div>
+  </form>
+
+  <form id="signupForm" onsubmit="handleSignup(event)">
+    <div class="field">
+      <label>USERNAME</label>
+      <input type="text" id="signupUsername" required minlength="3" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>EMAIL</label>
+      <input type="email" id="signupEmail" required autocomplete="email">
+    </div>
+    <div class="field">
+      <label>PASSWORD</label>
+      <input type="password" id="signupPassword" required minlength="4" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>CONFIRM PASSWORD</label>
+      <input type="password" id="signupConfirm" required minlength="4" autocomplete="new-password">
+    </div>
+    <button type="submit" class="submit-btn">> CREATE ACCOUNT</button>
+    <div class="msg" id="signupMsg"></div>
+  </form>
+
+  <a href="index.html" class="back">&larr; back to home</a>
+  <div class="terminal-line">[ encrypted connection established ]</div>
+</div>
+
+<script>
+  function switchTab(tab){
+    document.getElementById('loginTab').classList.toggle('active', tab==='login');
+    document.getElementById('signupTab').classList.toggle('active', tab==='signup');
+    document.getElementById('loginForm').classList.toggle('active', tab==='login');
+    document.getElementById('signupForm').classList.toggle('active', tab==='signup');
+    document.getElementById('loginMsg').textContent='';
+    document.getElementById('signupMsg').textContent='';
+  }
+
+  function getUsers(){
+    return JSON.parse(localStorage.getItem('osstats_users') || '{}');
+  }
+  function saveUsers(users){
+    localStorage.setItem('osstats_users', JSON.stringify(users));
+  }
+
+  function handleSignup(e){
+    e.preventDefault();
+    const msg = document.getElementById('signupMsg');
+    const username = document.getElementById('signupUsername').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+
+    if(password !== confirm){
+      msg.textContent = 'ERROR: password tidak cocok';
+      msg.className = 'msg error';
+      return;
+    }
+
+    const users = getUsers();
+    if(users[username]){
+      msg.textContent = 'ERROR: username sudah dipakai';
+      msg.className = 'msg error';
+      return;
+    }
+
+    users[username] = {
+      username, email, password,
+      avatar: '', banner: '', joined: new Date().toISOString()
+    };
+    saveUsers(users);
+
+    localStorage.setItem('osstats_user', JSON.stringify(users[username]));
+
+    msg.textContent = 'SUCCESS: akun dibuat, redirecting...';
+    msg.className = 'msg success';
+    setTimeout(()=> window.location.href = 'dashboard.html', 900);
+  }
+
+  function handleLogin(e){
+    e.preventDefault();
+    const msg = document.getElementById('loginMsg');
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    const users = getUsers();
+    const user = users[username];
+
+    if(!user || user.password !== password){
+      msg.textContent = 'ERROR: username atau password salah';
+      msg.className = 'msg error';
+      return;
+    }
+
+    localStorage.setItem('osstats_user', JSON.stringify(user));
+    msg.textContent = 'SUCCESS: login berhasil, redirecting...';
+    msg.className = 'msg success';
+    setTimeout(()=> window.location.href = 'dashboard.html', 700);
+  }
+
+  // udah login? langsung redirect
+  const current = JSON.parse(localStorage.getItem('osstats_user') || 'null');
+  if(current) window.location.href = 'dashboard.html';
+</script>
+
+</body>
+</html>
