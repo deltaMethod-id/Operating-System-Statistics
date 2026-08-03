@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings // OS-STATS</title>
+<style>
+  :root{
+    --bg:#0a0000;
+    --bg2:#120303;
+    --red:#ff003c;
+    --red-dim:#7a001d;
+    --black:#050000;
+    --text:#f1e1e1;
+    --grid:rgba(255,0,60,0.08);
+    --green:#4dff88;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Consolas','Courier New',monospace;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:40px 40px;
+    display:flex;min-height:100vh;
+  }
+
+  .sidebar{
+    width:220px;background:var(--bg2);border-right:1px solid var(--red-dim);
+    padding:24px 0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+  }
+  .side-logo{
+    font-size:20px;font-weight:bold;color:var(--red);letter-spacing:2px;
+    text-shadow:0 0 10px var(--red);padding:0 24px 24px;
+  }
+  .side-logo span{color:var(--text);}
+  .side-link{
+    display:flex;align-items:center;gap:12px;padding:13px 24px;color:#a88;
+    text-decoration:none;font-size:13px;letter-spacing:1px;border-left:3px solid transparent;
+    transition:.2s;
+  }
+  .side-link:hover, .side-link.active{
+    color:var(--red);background:rgba(255,0,60,0.06);border-left-color:var(--red);
+  }
+  .side-icon{
+    width:18px;height:18px;flex-shrink:0;
+    filter:brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(7466%) hue-rotate(348deg) brightness(101%) contrast(119%);
+    opacity:.75;
+  }
+  .side-link:hover .side-icon, .side-link.active .side-icon{opacity:1;}
+  .side-bottom{margin-top:auto;padding:16px 24px;border-top:1px solid var(--red-dim);}
+  .side-user{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .side-avatar{
+    width:34px;height:34px;border-radius:50%;background:var(--red-dim);
+    display:flex;align-items:center;justify-content:center;font-weight:bold;color:var(--red);
+    border:1px solid var(--red);overflow:hidden;flex-shrink:0;
+  }
+  .side-avatar img{width:100%;height:100%;object-fit:cover;}
+  .side-username{font-size:13px;color:var(--text);}
+  .logout-btn{
+    width:100%;background:transparent;border:1px solid var(--red-dim);color:#c99;
+    padding:8px;border-radius:4px;cursor:pointer;font-family:inherit;font-size:12px;
+    letter-spacing:1px;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+  .main{flex:1;padding:30px 36px;max-width:900px;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;flex-wrap:wrap;gap:14px;
+  }
+  .topbar h1{font-size:24px;letter-spacing:2px;color:var(--text);}
+
+  .panel{
+    background:linear-gradient(160deg, var(--bg2), var(--black));
+    border:1px solid var(--red-dim);border-radius:8px;padding:26px;margin-bottom:24px;
+  }
+  .panel h2{font-size:15px;color:var(--red);letter-spacing:1px;margin-bottom:20px;
+    border-left:3px solid var(--red);padding-left:10px;}
+
+  /* Banner + avatar preview */
+  .banner-wrap{
+    position:relative;height:160px;border-radius:8px;overflow:hidden;margin-bottom:16px;
+    background:linear-gradient(135deg, var(--red-dim), var(--black));
+    border:1px solid var(--red-dim);
+  }
+  .banner-wrap img{width:100%;height:100%;object-fit:cover;}
+  .banner-overlay{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.45);opacity:0;transition:.2s;cursor:pointer;
+  }
+  .banner-wrap:hover .banner-overlay{opacity:1;}
+  .avatar-wrap{
+    position:relative;width:90px;height:90px;border-radius:50%;
+    border:3px solid var(--red);overflow:hidden;margin-top:-55px;margin-left:20px;
+    background:var(--red-dim);display:flex;align-items:center;justify-content:center;
+    font-size:32px;font-weight:bold;color:var(--red);box-shadow:0 0 20px rgba(255,0,60,0.4);
+  }
+  .avatar-wrap img{width:100%;height:100%;object-fit:cover;}
+  .avatar-overlay{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.5);opacity:0;transition:.2s;cursor:pointer;font-size:11px;text-align:center;
+  }
+  .avatar-wrap:hover .avatar-overlay{opacity:1;}
+  input[type=file]{display:none;}
+  .upload-label{color:#fff;font-size:11px;letter-spacing:1px;}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;}
+  .field label{font-size:12px;color:#c99;letter-spacing:1px;}
+  .field input{
+    background:var(--black);border:1px solid var(--red-dim);border-radius:4px;
+    padding:11px 12px;color:var(--text);font-family:inherit;font-size:14px;outline:none;transition:.2s;
+  }
+  .field input:focus{border-color:var(--red);box-shadow:0 0 12px rgba(255,0,60,0.3);}
+  .field small{color:#A40000;font-size:11px;}
+
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .save-btn{
+    background:var(--red);color:var(--black);border:none;padding:11px 24px;border-radius:4px;
+    font-weight:bold;letter-spacing:1px;cursor:pointer;font-family:inherit;font-size:13px;transition:.2s;
+  }
+  .save-btn:hover{box-shadow:0 0 20px var(--red);}
+  .danger-btn{
+    background:transparent;border:1px solid #ff5566;color:#ff5566;padding:11px 24px;border-radius:4px;
+    letter-spacing:1px;cursor:pointer;font-family:inherit;font-size:13px;transition:.2s;
+  }
+  .danger-btn:hover{background:#ff5566;color:var(--black);}
+
+  .msg{font-size:12px;margin-top:14px;min-height:16px;}
+  .msg.success{color:var(--green);}
+  .msg.error{color:#ff5566;}
+
+  @media(max-width:800px){
+    .sidebar{position:fixed;left:-220px;z-index:200;transition:.3s;box-shadow:0 0 30px rgba(0,0,0,0.6);}
+    .sidebar.open{left:0;}
+    .main{padding:20px;}
+    .menu-toggle{display:block !important;}
+  }
+  .menu-toggle{
+    display:none;background:transparent;border:1px solid var(--red-dim);color:var(--red);
+    padding:8px 12px;border-radius:4px;cursor:pointer;font-family:inherit;
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <div class="side-logo">OS<span>-STATS</span></div>
+  <a href="index.html" class="side-link">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/home/v6/24px.svg" onerror="this.src=localIcon('H')">
+    Home
+  </a>
+  <a href="dashboard.html" class="side-link">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/monitoring/v6/24px.svg" onerror="this.src=localIcon('D')">
+    Dashboard
+  </a>
+  <a href="settings.html" class="side-link active">
+    <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/settings/v6/24px.svg" onerror="this.src=localIcon('S')">
+    Settings
+  </a>
+
+  <div class="side-bottom">
+    <div class="side-user">
+      <div class="side-avatar" id="sideAvatar">?</div>
+      <div class="side-username" id="sideUsername">Guest</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <img class="side-icon" src="https://fonts.gstatic.com/s/i/materialiconsoutlined/logout/v6/24px.svg" onerror="this.src=localIcon('X')">
+      LOGOUT
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <h1>PROFILE SETTINGS</h1>
+  </div>
+
+  <div class="panel">
+    <h2>BANNER & AVATAR</h2>
+
+    <div class="banner-wrap" id="bannerWrap">
+      <img id="bannerImg" style="display:none;">
+      <div class="banner-overlay" onclick="document.getElementById('bannerInput').click()">
+        <span class="upload-label">GANTI BANNER</span>
+      </div>
+    </div>
+    <input type="file" id="bannerInput" accept="image/*">
+
+    <div class="avatar-wrap" id="avatarWrap">
+      <span id="avatarLetter">?</span>
+      <img id="avatarImg" style="display:none;">
+      <div class="avatar-overlay" onclick="document.getElementById('avatarInput').click()">
+        UBAH
+      </div>
+    </div>
+    <input type="file" id="avatarInput" accept="image/*">
+    <div class="msg" id="imgMsg"></div>
+  </div>
+
+  <div class="panel">
+    <h2>ACCOUNT INFO</h2>
+    <form id="profileForm">
+      <div class="field">
+        <label>USERNAME</label>
+        <input type="text" id="username" minlength="3" required>
+        <small>Ini yang bakal muncul di sidebar dan leaderboard.</small>
+      </div>
+      <div class="field">
+        <label>EMAIL</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="save-btn">> SAVE CHANGES</button>
+      </div>
+      <div class="msg" id="profileMsg"></div>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>DANGER ZONE</h2>
+    <p style="font-size:12px;color:#A40000;margin-bottom:16px;">Hapus akun secara permanen dari perangkat ini. Aksi ini gak bisa dibatalkan.</p>
+    <div class="btn-row">
+      <button class="danger-btn" onclick="deleteAccount()">HAPUS AKUN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function localIcon(letter){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+      <rect width="18" height="18" rx="4" fill="none" stroke="#ff003c" stroke-width="1.4"/>
+      <text x="50%" y="55%" text-anchor="middle" dominant-baseline="middle"
+        font-family="Consolas,monospace" font-size="9" fill="#ff003c" font-weight="bold">${letter}</text>
+    </svg>`;
+    return "data:image/svg+xml;base64," + btoa(svg);
+  }
+
+  // ---- Auth guard ----
+  let user = JSON.parse(localStorage.getItem('osstats_user') || 'null');
+  if(!user){
+    window.location.href = 'auth.html';
+  }
+
+  function refreshSidebar(){
+    document.getElementById('sideUsername').textContent = user.username;
+    const avatarEl = document.getElementById('sideAvatar');
+    avatarEl.innerHTML = user.avatar
+      ? `<img src="${user.avatar}" alt="avatar">`
+      : user.username.charAt(0).toUpperCase();
+  }
+
+  function refreshPanel(){
+    document.getElementById('username').value = user.username;
+    document.getElementById('email').value = user.email || '';
+
+    const bannerImg = document.getElementById('bannerImg');
+    if(user.banner){
+      bannerImg.src = user.banner;
+      bannerImg.style.display = 'block';
+    } else {
+      bannerImg.style.display = 'none';
+    }
+
+    const avatarImg = document.getElementById('avatarImg');
+    const avatarLetter = document.getElementById('avatarLetter');
+    if(user.avatar){
+      avatarImg.src = user.avatar;
+      avatarImg.style.display = 'block';
+      avatarLetter.style.display = 'none';
+    } else {
+      avatarImg.style.display = 'none';
+      avatarLetter.style.display = 'block';
+      avatarLetter.textContent = user.username.charAt(0).toUpperCase();
+    }
+  }
+
+  refreshSidebar();
+  refreshPanel();
+
+  function logout(){
+    localStorage.removeItem('osstats_user');
+    window.location.href = 'index.html';
+  }
+
+  function getUsers(){
+    return JSON.parse(localStorage.getItem('osstats_users') || '{}');
+  }
+  function saveUsers(users){
+    localStorage.setItem('osstats_users', JSON.stringify(users));
+  }
+  function persistUser(){
+    localStorage.setItem('osstats_user', JSON.stringify(user));
+    const users = getUsers();
+    users[user.username] = user;
+    saveUsers(users);
+  }
+
+  function fileToBase64(file, cb){
+    const reader = new FileReader();
+    reader.onload = () => cb(reader.result);
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('avatarInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 1.5*1024*1024){
+      showImgMsg('ERROR: ukuran foto max 1.5MB', true);
+      return;
+    }
+    fileToBase64(file, (base64)=>{
+      user.avatar = base64;
+      persistUser();
+      refreshSidebar();
+      refreshPanel();
+      showImgMsg('Avatar berhasil diupdate', false);
+    });
+  });
+
+  document.getElementById('bannerInput').addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 2.5*1024*1024){
+      showImgMsg('ERROR: ukuran banner max 2.5MB', true);
+      return;
+    }
+    fileToBase64(file, (base64)=>{
+      user.banner = base64;
+      persistUser();
+      refreshPanel();
+      showImgMsg('Banner berhasil diupdate', false);
+    });
+  });
+
+  function showImgMsg(text, isError){
+    const el = document.getElementById('imgMsg');
+    el.textContent = text;
+    el.className = 'msg ' + (isError ? 'error' : 'success');
+    setTimeout(()=> el.textContent = '', 2500);
+  }
+
+  document.getElementById('profileForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const newUsername = document.getElementById('username').value.trim();
+    const newEmail = document.getElementById('email').value.trim();
+    const msg = document.getElementById('profileMsg');
+
+    const users = getUsers();
+    if(newUsername !== user.username && users[newUsername]){
+      msg.textContent = 'ERROR: username udah dipakai orang lain';
+      msg.className = 'msg error';
+      return;
+    }
+
+    if(newUsername !== user.username){
+      delete users[user.username];
+    }
+
+    user.username = newUsername;
+    user.email = newEmail;
+    users[newUsername] = user;
+    saveUsers(users);
+    localStorage.setItem('osstats_user', JSON.stringify(user));
+
+    refreshSidebar();
+    msg.textContent = 'SUCCESS: profil berhasil disimpan';
+    msg.className = 'msg success';
+    setTimeout(()=> msg.textContent = '', 2500);
+  });
+
+  function deleteAccount(){
+    if(!confirm('Yakin mau hapus akun ini permanen? Gak bisa dibatalin.')) return;
+    const users = getUsers();
+    delete users[user.username];
+    saveUsers(users);
+    localStorage.removeItem('osstats_user');
+    window.location.href = 'index.html';
+  }
+</script>
+
+</body>
+</html>
